@@ -1,78 +1,124 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
 
     [SerializeField]
-    GameObject mRocketPrefab;
-
+    GameObject PauseMenu, GameOverMenu;
     [SerializeField]
-    Button play;
-    [SerializeField]
-    Button pause;
+    GameObject pause;
     [SerializeField]
     GameObject explosion;
-
-
     [SerializeField]
-    List<GameObject> mRocketList = new List<GameObject>();
-
+    GameObject mainMenu;
     [SerializeField]
-    List<Transform> mRandomSpawnPoints = new List<Transform>();
+    TextMeshProUGUI finalScoreText;
 
-    [SerializeField]
-    Transform mRocketParent;
+
+
+    public static State mCurrentState = State.MAINMENU;
+
+    public enum State { 
+        PLAY,
+        PAUSE,
+        GAMEOVER,
+        MAINMENU
+    }
+
+    public static bool isPaused() {
+        return (mCurrentState == State.PAUSE);
+    }
+
+    public static bool isPlaying() {
+        return (mCurrentState == State.PLAY);
+    }
+
+    static bool hasRestarted = false;
 
     private void Awake() {
-        Application.targetFrameRate = 120;
+        Application.targetFrameRate = 60;
     }
 
     private void Start() {
-        mRocketList.Add(Instantiate(mRocketPrefab, mRocketParent));
-        mRocketList.Add(Instantiate(mRocketPrefab, mRocketParent));
-        mRocketList.Add(Instantiate(mRocketPrefab, mRocketParent));
-        mRocketList.Add(Instantiate(mRocketPrefab, mRocketParent));
-
-        foreach (var rocket in mRocketList) {
-            int random = Random.Range(0, mRandomSpawnPoints.Count - 1);
-            rocket.transform.position = mRandomSpawnPoints[random].position;
-            rocket.SetActive(true);
+        if (hasRestarted)
+        {
+            PlayGame();
         }
-
-
+        else {
+            LoadMainMenu();
+        }
+            
     }
 
     public void PauseGame() {
-        Time.timeScale = 0;
-        pause.gameObject.SetActive(false);
-        play.gameObject.SetActive(true);
+        mCurrentState = State.PAUSE;
+        pause.SetActive(false);
+        PauseMenu.gameObject.SetActive(true);
+        mainMenu.gameObject.SetActive(false);
+        GameOverMenu.SetActive(false);
+    }
+
+    public void RestartGame() {
+        hasRestarted = true;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        mainMenu.gameObject.SetActive(false);
+        GameOverMenu.SetActive(false);
+        mCurrentState = State.PLAY;
+    }
+
+    public void LoadMainMenu() {
+        if(mCurrentState == State.MAINMENU)
+            return;
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        mCurrentState = State.MAINMENU;
+        pause.SetActive(false);
+        PauseMenu.gameObject.SetActive(false);
+        GameOverMenu.SetActive(false);
+        mainMenu.gameObject.SetActive(true);
+    }
+
+    public void GameOver() {
+        mCurrentState = State.GAMEOVER;
+        finalScoreText.text = "Score: " + FindObjectOfType<ScoreManager>().Score;
+        pause.SetActive(false);
+        PauseMenu.gameObject.SetActive(false);
+        mainMenu.gameObject.SetActive(false);
+        GameOverMenu.SetActive(true);
+        FindObjectOfType<AdManager>().ShowInterstitial();
     }
 
     public void PlayGame() {
-        Time.timeScale = 1;
-        play.gameObject.SetActive(false);
+        mCurrentState = State.PLAY;
+        PauseMenu.SetActive(false);
         pause.gameObject.SetActive(true);
+        mainMenu.gameObject.SetActive(false);
     }
 
-    public void SpawnRocket(GameObject rocket) {
-        int random = Random.Range(0, mRandomSpawnPoints.Count - 1);
-        rocket.transform.position = mRandomSpawnPoints[random].position;
-        rocket.SetActive(true);
+    public void SpawnExplosion(Vector3 pos, Transform parent) {
+        StartCoroutine(Fade(pos, parent));
     }
 
-    public void SpawnExplosion(Vector3 pos) {
-        StartCoroutine(Fade(pos));
-    }
+    public IEnumerator Fade(Vector3 pos, Transform parent) {
 
-    public IEnumerator Fade(Vector3 pos) {
-        GameObject obj = Instantiate(explosion);
+        GameObject obj = null;
+
+        if (parent == null)
+        {
+            obj = Instantiate(explosion);
+        }
+        else {
+           obj = Instantiate(explosion, parent);
+        }
+
+        
         obj.transform.position = pos;
-        Debug.Log("exploded");
         yield return new WaitForSeconds(0.8f);
-        Debug.Log("exploded destroyed");
         Destroy(obj);
     }
 

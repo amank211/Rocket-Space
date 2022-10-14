@@ -14,17 +14,6 @@ public class Bullet : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
-
-        if (!GetComponent<Renderer>().isVisible)
-        {
-            gameObject.GetComponent<TrailRenderer>().emitting = false;
-            gameObject.SetActive(false);
-            gameObject.transform.position = new Vector3(0, 0, 0);
-
-        }
-
-
 
     }
 }

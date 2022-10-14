@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 199780238aeef2e4da4dab6f2f11e713, type: 3}
+  m_Name: Wave 1
+  m_EditorClassIdentifier: 
+  ID: 0
+  randomSpawnPoints: {fileID: 0}
+  Enemies:
+  - {fileID: 1538066084814348342, guid: fd5c5b152361a0f46acc35d2c44e48e7, type: 3}
+  - {fileID: 3915655311724983975, guid: af8537e1659d665439290ea46478fa5f, type: 3}
+  isBossWave: 0
+  bulletToBeAdded: 3

@@ -10,52 +10,51 @@ public class CrabController : MonoBehaviour
     [SerializeField]
     float mSpeed;
 
+    public WaveManager.SceneWave mWave;
+
+    public void setWave(ref WaveManager.SceneWave wave) { 
+        this.mWave = wave;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
-        
         mTarget = FindObjectOfType<SaveMe>().gameObject.transform;
-       
-
     }
 
     // Update is called once per frame
     void Update()
     {
-        /*angle -= Time.deltaTime/ 2;
-        radius -=   Time.deltaTime / 10f;
+        if (!GameManager.isPlaying())
+            return;
 
-        if (angle == 360)
-            angle = 0;
-        Vector3 newPosition = new Vector3(0,0,0);
-        newPosition.x = radius * Mathf.Cos(angle);
-        newPosition.y = radius * Mathf.Sin(angle);*/
-
-        transform.position = Vector3.MoveTowards(transform.position, mTarget.position, mSpeed * Time.deltaTime);
-        Vector3 offset = mTarget.position - transform.position;
-
-        transform.rotation = Quaternion.LookRotation(
-                               Vector3.forward, // Keep z+ pointing straight into the screen.
-                               offset           // Point y+ toward the target.
-                             );
-
-        if (!GetComponent<Renderer>().isVisible)
-        {    
-            FindObjectOfType<GameManager>().SpawnRocket(gameObject);
+            Vector3 pos = transform.position;
+        if (transform.position.y > -5)
+        {
+            pos.y -= mSpeed * Time.deltaTime;
+            transform.position = pos;
         }
+        else {
+            transform.position = Vector3.MoveTowards(transform.position, mTarget.transform.position, Time.deltaTime * mSpeed / 2);
+            Vector3 angles = transform.eulerAngles;
+            angles.z = - Mathf.Atan(transform.localPosition.x / transform.localPosition.y) * Mathf.Rad2Deg + 180;
+            transform.eulerAngles = angles;
+        }
+        
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Bullet"))
         {
-            FindObjectOfType<ScoreManager>().IncrementScore();
+            FindObjectOfType<ScoreManager>().IncrementScore(1);
             FindObjectOfType<AudioManager>().Play("EnemyDie");
             collision.gameObject.GetComponent<TrailRenderer>().emitting = false;
             collision.gameObject.SetActive(false);
             collision.gameObject.transform.position = new Vector3(0, 0, 0);
-            FindObjectOfType<GameManager>().SpawnExplosion(transform.position);
-            FindObjectOfType<GameManager>().SpawnRocket(gameObject);
+            FindObjectOfType<GameManager>().SpawnExplosion(transform.position, null);
+            FindObjectOfType<WaveManager>().mCurrentWave.EnemiesAlive.Remove(gameObject);
+            Destroy(gameObject);
         }
     }
 }

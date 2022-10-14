@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -19,19 +20,35 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     float mBulletSpeed;
 
+    [SerializeField]
+    int mAvailaibleBullets;
+
+    int MAX_BULLETS = 35;
+
+    [SerializeField]
+    ShowBullets mSHowBullets;
+
+    [SerializeField]
+    TextMeshProUGUI mBulletText;
+
     List<GameObject> bullets = new List<GameObject>();
 
     // Start is called before the first frame update
     void Start()
     {
         torque = 1f;
-        bullets.Add(Instantiate(bullet));
-        bullets.Add(Instantiate(bullet));
-        bullets.Add(Instantiate(bullet));
-        bullets.Add(Instantiate(bullet));
-        bullets.Add(Instantiate(bullet));
-        bullets.Add(Instantiate(bullet));
-        bullets.Add(Instantiate(bullet));
+        mBulletText.text = "Bullets: " + mAvailaibleBullets;
+        mSHowBullets.InitBullets(mAvailaibleBullets);
+    }
+
+    public void AddBullets(int count) {
+        int lastBullets = mAvailaibleBullets;
+        mAvailaibleBullets += count;
+        if(mAvailaibleBullets > MAX_BULLETS)
+            mAvailaibleBullets = MAX_BULLETS;
+        mBulletText.text = "Bullets: " + mAvailaibleBullets;
+        if((mAvailaibleBullets - lastBullets) > 0)
+            mSHowBullets.AddBullets(mAvailaibleBullets - lastBullets);
     }
 
     // Update is called once per frame
@@ -51,15 +68,16 @@ public class PlayerController : MonoBehaviour
     }
 
     public void Shoot() {
-        Debug.Log("torque: " + torque + " mx : " + MAX_TORQUE);
         if (torque < MAX_TORQUE) {
-            Debug.Log(Mathf.Min(2f, torque - MAX_TORQUE));
             torque += Mathf.Min(2f,  MAX_TORQUE - torque);
         }
 
         GameObject bull = null;
 
-        for(int i = bullets.Count -1; i >=0; i--) {
+        mAvailaibleBullets--;
+        mBulletText.text = "Bullets: " + mAvailaibleBullets;
+
+        for (int i = bullets.Count -1; i >=0; i--) {
             GameObject obj = bullets[i];
             if (!obj.active && obj.transform.position.x == 0f && transform.position.y == 0f) {
                 bull = obj;
@@ -69,6 +87,8 @@ public class PlayerController : MonoBehaviour
             bull = Instantiate(bullet);
             bullets.Add(bull);
         }
+
+        mSHowBullets.RemoveOneBullet();
 
         FindObjectOfType<GameManager>().EnableTrail(bull.GetComponent<TrailRenderer>());
         bull.transform.position = bulletPosition.position;
@@ -83,5 +103,10 @@ public class PlayerController : MonoBehaviour
 
         rigid.velocity = new Vector3(mBulletSpeed * bulletPosition.position.x, mBulletSpeed * bulletPosition.position.y, 0);
         FindObjectOfType<AudioManager>().Play("shoot");
+
+        if (mAvailaibleBullets <= 0)
+        {
+            return;
+        }
     }
 }
